@@ -6,15 +6,39 @@ export default function Home() {
     console.log("구글 로그인");
   };
 
-  const handleKakaoLogin = () => {
+  const handleKakaoLogin = async () => {
     // 카카오 로그인 로직 추가
-    console.log("카카오 로그인");
+    try {
+      const data = await callGateway();
+      console.log("카카오 로그인 성공:", data);
+    } catch (error) {
+      console.error("카카오 로그인 실패:", error);
+    }
   };
+
+  async function callGateway() {
+    const res = await fetch("http://localhost:8080/api/auth/kakao/login", {
+      method: "POST",
+      credentials: "include", // 쿠키를 쓰면 필요
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({}), // 빈 객체 전송 (required = false이므로)
+    });
+
+    if (!res.ok) {
+      throw new Error(`HTTP error! status: ${res.status}`);
+    }
+
+    const data = await res.json();
+    return data;
+  }
 
   const handleNaverLogin = () => {
     // 네이버 로그인 로직 추가
     console.log("네이버 로그인");
   };
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-white font-sans">

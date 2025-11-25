@@ -14,17 +14,16 @@ import java.util.Collections;
 @Configuration
 public class AuthRouter {
 
-    @Bean
-    public RouteLocator authRoutes(RouteLocatorBuilder builder) {
-        return builder.routes()
-                .route("auth-service", r -> r
-                        // 여기서 /api로 시작하는 요청을 매칭합니다
-                        .path("/api/auth/**")
-                        // /api를 제거하고 나머지 경로만 AuthService로 전달
-                        .filters(f -> f.rewritePath("/api/(?<segment>.*)", "/${segment}"))
-                        .uri("http://authservice:8081"))
-                .build();
-    }
+    // 라우팅은 application.yaml에서 관리하므로 주석 처리
+    // @Bean
+    // public RouteLocator authRoutes(RouteLocatorBuilder builder) {
+    // return builder.routes()
+    // .route("auth-service", r -> r
+    // .path("/api/auth/**")
+    // .filters(f -> f.rewritePath("/api/(?<segment>.*)", "/${segment}"))
+    // .uri("http://authservice:8081"))
+    // .build();
+    // }
 
     @Bean
     public CorsWebFilter corsWebFilter() {

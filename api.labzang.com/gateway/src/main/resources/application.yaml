@@ -4,6 +4,29 @@ spring:
   cloud:
     config:
       enabled: false
+    gateway:
+      routes:
+        # /auth 서브라우터 - 로드밸런싱 지원
+        - id: auth-service
+          uri: http://authservice:8081
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - RewritePath=/api/(?<segment>.*), /${segment}
+          # 로드밸런싱을 위한 여러 인스턴스 설정 (필요시 추가)
+          # 여러 인스턴스가 있는 경우 아래와 같이 설정 가능:
+          # - id: auth-service-1
+          #   uri: http://authservice-1:8081
+          #   predicates:
+          #     - Path=/api/auth/**
+          #   filters:
+          #     - RewritePath=/api/(?<segment>.*), /${segment}
+          # - id: auth-service-2
+          #   uri: http://authservice-2:8081
+          #   predicates:
+          #     - Path=/api/auth/**
+          #   filters:
+          #     - RewritePath=/api/(?<segment>.*), /${segment}
 
 server:
   port: 8080
