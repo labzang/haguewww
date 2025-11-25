@@ -1,32 +1,51 @@
 spring:
   application:
     name: gateway
+  config:
+    import: "optional:configserver:"
+  autoconfigure:
+    exclude:
+      - org.springframework.cloud.autoconfigure.LifecycleMvcEndpointAutoConfiguration
+      - org.springframework.cloud.autoconfigure.RefreshAutoConfiguration
+      - org.springframework.boot.actuate.autoconfigure.web.servlet.ServletManagementContextAutoConfiguration
+      - org.springframework.cloud.gateway.config.GatewayRedisAutoConfiguration
+      - org.springframework.cloud.client.discovery.simple.reactive.SimpleReactiveDiscoveryClientAutoConfiguration
+      - org.springframework.cloud.client.discovery.composite.reactive.ReactiveCompositeDiscoveryClientAutoConfiguration
   cloud:
-    config:
-      enabled: false
+    discovery:
+      enabled: true
+    loadbalancer:
+      enabled: true
     gateway:
-      routes:
-        # /auth 서브라우터 - 로드밸런싱 지원
-        - id: auth-service
-          uri: http://authservice:8081
-          predicates:
-            - Path=/api/auth/**
-          filters:
-            - RewritePath=/api/(?<segment>.*), /${segment}
-          # 로드밸런싱을 위한 여러 인스턴스 설정 (필요시 추가)
-          # 여러 인스턴스가 있는 경우 아래와 같이 설정 가능:
-          # - id: auth-service-1
-          #   uri: http://authservice-1:8081
-          #   predicates:
-          #     - Path=/api/auth/**
-          #   filters:
-          #     - RewritePath=/api/(?<segment>.*), /${segment}
-          # - id: auth-service-2
-          #   uri: http://authservice-2:8081
-          #   predicates:
-          #     - Path=/api/auth/**
-          #   filters:
-          #     - RewritePath=/api/(?<segment>.*), /${segment}
+      server:
+        webflux:
+          routes:
+            - id: auth-service
+              uri: lb://auth-service
+              predicates:
+                - Path=/api/auth/**
+              filters:
+                - RewritePath=/api/(?<segment>.*), /${segment}
+          discovery:
+            locator:
+              enabled: true
+              lower-case-service-id: true
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowed-origins:
+                  - "http://localhost:3000"
+                  - "http://127.0.0.1:3000"
+                allowed-methods:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                  - OPTIONS
+                  - PATCH
+                allowed-headers: "*"
+                allow-credentials: true
+                max-age: 3600
 
 server:
   port: 8080
@@ -35,6 +54,18 @@ springdoc:
   api-docs:
     path: /v3/api-docs
   swagger-ui:
-    path: /swagger-ui.html
+    path: /docs
     enabled: true
-    use-root-path: true
+    operations-sorter: method
+    tags-sorter: alpha
+    try-it-out-enabled: true
+    use-root-path: false
+  show-actuator: false
+  paths-to-match:
+    - /**
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

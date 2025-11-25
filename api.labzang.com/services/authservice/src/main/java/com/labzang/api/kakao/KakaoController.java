@@ -37,7 +37,7 @@ public class KakaoController {
                 "id", "kakao_user_123",
                 "email", "user@example.com",
                 "name", "테스트 사용자"));
-
+        System.out.println("😎😎😎😎😎😎 카카오 로그인 성공 " + response);
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }
