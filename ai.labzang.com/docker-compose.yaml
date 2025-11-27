@@ -5,3 +5,10 @@ services:
       dockerfile: Dockerfile
     ports:
       - "9000:9000"
+
+  clawlerservice:
+    build:
+      context: ./services/clawlerservice
+      dockerfile: Dockerfile
+    ports:
+      - "9001:9001"
