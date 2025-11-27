@@ -1,6 +1,20 @@
 import uvicorn
+import sys
+import importlib.util
+from pathlib import Path
 from fastapi import FastAPI, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
+
+# 프로젝트 루트 경로 설정
+project_root = Path(__file__).parent.parent.parent
+clawler_main_path = project_root / "services" / "clawler-service" / "app" / "main.py"
+
+# clawler-service의 라우터 동적 import
+spec = importlib.util.spec_from_file_location("clawler_main", clawler_main_path)
+clawler_main = importlib.util.module_from_spec(spec)
+sys.modules["clawler_main"] = clawler_main
+spec.loader.exec_module(clawler_main)
+clawler_router = clawler_main.clawler_router
 
 app = FastAPI()
 
@@ -22,6 +36,8 @@ async def read_root():
 
 # 라우터를 앱에 포함
 app.include_router(main_router)
+# clawler-service 서브라우터 연결
+app.include_router(clawler_router)
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=9000, reload=True)
