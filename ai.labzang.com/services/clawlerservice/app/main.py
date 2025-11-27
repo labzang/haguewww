@@ -8,10 +8,6 @@ clawler_router = APIRouter(prefix="/clawler", tags=["clawler"])
 async def clawler_root():
     return {"message": "Clawler Service", "status": "running"}
 
-@clawler_router.get("/health")
-async def clawler_health():
-    return {"status": "healthy", "service": "clawler-service"}
-
 app = FastAPI(
     title="Clawler Service API",
     description="Clawler 서비스 API 문서",
