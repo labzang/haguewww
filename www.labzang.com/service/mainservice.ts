@@ -5,13 +5,15 @@
 export const { handleGoogleLogin, handleKakaoLogin, handleNaverLogin } = (() => {
     // 외부 스코프 - 공통 설정 및 변수
     const baseUrl = 'http://localhost:8080';
-    const oauth2Path = '/oauth2';
+    const authPath = '/api/auth';
 
     /**
      * 구글 로그인 핸들러 (이너 함수)
      */
     function handleGoogleLogin() {
         // 구글 로그인 로직 추가
+        const googleAuthUrl = `${baseUrl}${authPath}/google/login`;
+ 
         console.log("구글 로그인");
     }
 
