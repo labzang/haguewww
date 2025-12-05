@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function KakaoCallback() {
+function KakaoCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -117,6 +117,23 @@ export default function KakaoCallback() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function KakaoCallback() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-white font-sans">
+        <main className="flex w-full max-w-md flex-col items-center gap-8 px-8 py-16">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#FEE500] border-t-transparent"></div>
+            <p className="text-lg font-medium text-gray-900">카카오 로그인 처리 중...</p>
+          </div>
+        </main>
+      </div>
+    }>
+      <KakaoCallbackContent />
+    </Suspense>
   );
 }
 

@@ -1,10 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { handleGoogleLogin, handleKakaoLogin, handleNaverLogin } from '@/service/mainservice';
 
-export default function Home() {
+function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -108,5 +108,24 @@ export default function Home() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center bg-white font-sans">
+        <main className="flex w-full max-w-md flex-col items-center gap-8 px-8 py-16">
+          <h1 className="text-3xl font-bold text-gray-900">로그인</h1>
+          <div className="flex w-full flex-col gap-4">
+            <div className="flex h-14 w-full items-center justify-center gap-3 rounded-lg border border-gray-300 bg-gray-100 px-6 text-base font-medium text-gray-500">
+              로딩 중...
+            </div>
+          </div>
+        </main>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }

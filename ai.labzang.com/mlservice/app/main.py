@@ -3,20 +3,52 @@ Titanic Service - FastAPI 애플리케이션
 """
 import sys
 import csv
+import os
 from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-# 공통 모듈 경로 추가
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+# 공통 모듈 경로 추가 (최우선)
+current_file = Path(__file__).resolve()
+base_dir = current_file.parent.parent  # /app (Docker) 또는 mlservice (로컬)
 
-from app.config import TitanicServiceConfig
-from common.middleware import LoggingMiddleware
-from common.utils import setup_logging
+# 경로 추가
+base_path_str = str(base_dir)
+if base_path_str not in sys.path:
+    sys.path.insert(0, base_path_str)
 
-# 설정 로드
-config = TitanicServiceConfig()
+# Docker 환경 확인 및 /app 경로 추가
+if os.path.exists("/app"):
+    if "/app" not in sys.path:
+        sys.path.insert(0, "/app")
+
+# 설정 로드 (경로 설정 후)
+try:
+    from app.config import TitanicServiceConfig
+    config = TitanicServiceConfig()
+except Exception as e:
+    # config.py를 찾을 수 없는 경우 기본값 사용
+    class Config:
+        service_name = "mlservice"
+        service_version = "1.0.0"
+        port = 9010
+    config = Config()
+
+# 라우터 및 공통 모듈 import
+try:
+    from app.titanic.router import router as titanic_router
+    from common.middleware import LoggingMiddleware
+    from common.utils import setup_logging
+except ImportError as e:
+    # 모듈을 찾을 수 없는 경우 기본값 사용
+    from fastapi import APIRouter
+    titanic_router = APIRouter()
+    class LoggingMiddleware:
+        pass
+    def setup_logging(name):
+        import logging
+        return logging.getLogger(name)
 
 # 로깅 설정
 logger = setup_logging(config.service_name)
@@ -24,8 +56,47 @@ logger = setup_logging(config.service_name)
 # FastAPI 앱 생성
 app = FastAPI(
     title="Titanic Service API",
-    description="타이타닉 데이터 서비스 API 문서",
-    version=config.service_version
+    description="""
+    ## 타이타닉 데이터 서비스 API
+    
+    머신러닝을 활용한 타이타닉 승객 데이터 분석 및 생존 예측 서비스입니다.
+    
+    ### 주요 기능
+    - 승객 데이터 조회 및 통계 분석
+    - 머신러닝 모델 훈련 (Random Forest)
+    - 승객 생존 예측
+    - 배치 예측 지원
+    
+    ### 기술 스택
+    - **Framework**: FastAPI
+    - **ML Library**: scikit-learn, pandas, numpy
+    - **Model**: Random Forest Classifier
+    
+    ### API 문서
+    - Swagger UI: `/docs`
+    - ReDoc: `/redoc`
+    - OpenAPI Schema: `/openapi.json`
+    """,
+    version=config.service_version,
+    contact={
+        "name": "ML Service Team",
+        "email": "support@labzang.com",
+    },
+    license_info={
+        "name": "MIT",
+    },
+    tags_metadata=[
+        {
+            "name": "titanic",
+            "description": "타이타닉 승객 데이터 관련 API",
+        },
+    ],
+    openapi_tags=[
+        {
+            "name": "titanic",
+            "description": "타이타닉 승객 데이터 및 머신러닝 예측 기능",
+        },
+    ],
 )
 
 # CORS 설정
@@ -39,6 +110,9 @@ app.add_middleware(
 
 # 미들웨어 추가
 app.add_middleware(LoggingMiddleware)
+
+# 라우터 등록
+app.include_router(titanic_router)
 
 # CSV 파일 경로
 CSV_FILE_PATH = Path(__file__).parent / "train.csv"

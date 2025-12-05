@@ -9,11 +9,11 @@ WORKDIR /app
 COPY common ./common
 
 # requirements.txt 복사 및 설치
-COPY titanicservice/requirements.txt ./requirements.txt
+COPY mlservice/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 앱 복사
-COPY titanicservice/app ./app
+COPY mlservice/app ./app
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "9002"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "9010"]
 
