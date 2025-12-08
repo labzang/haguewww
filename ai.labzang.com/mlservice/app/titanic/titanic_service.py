@@ -24,7 +24,12 @@ class TitanicService:
     def __init__(self):
         pass
 
-    def preprocess(self):
+    def preprocess(self) -> Dict[str, Any]:
+        """
+        타이타닉 데이터 전처리 실행
+        Returns:
+            전처리 결과 정보 딕셔너리
+        """
         ic("😎😎 전처리 시작")
         the_method = TitanicMethod()
         df_train = the_method.new_model('train.csv')
@@ -50,6 +55,16 @@ class TitanicService:
         ic(f'3. Train 의 상위 5개 행\n {this_train.head(5)} ')
         ic(f'4. Train 의 null 의 갯수\n {the_method.check_null(this_train)}개')
         
+        # 전처리 결과 정보 반환
+        return {
+            "status": "success",
+            "rows": len(this_train),
+            "columns": this_train.columns.tolist(),
+            "column_count": len(this_train.columns),
+            "null_count": int(the_method.check_null(this_train)),
+            "sample_data": this_train.head(5).to_dict(orient="records"),
+            "dtypes": this_train.dtypes.astype(str).to_dict()
+        }
 
     def modeling(self):
         ic("😎😎 모델링 시작")

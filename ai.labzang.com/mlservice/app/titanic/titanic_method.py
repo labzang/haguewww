@@ -78,37 +78,24 @@ class TitanicMethod(object):
         """
         df = df.copy()
         
-        # 결측치를 최빈값으로 채우기
-        if df["Embarked"].isnull().any():
-            mode_embarked = df["Embarked"].mode()[0] if not df["Embarked"].mode().empty else "S"
-            df["Embarked"].fillna(mode_embarked, inplace=True)
-            ic(f"Embarked 결측치를 최빈값 {mode_embarked}로 채웠습니다")
-        
-        # One-hot encoding
-        embarked_dummies = pd.get_dummies(df["Embarked"], prefix="Embarked")
-        df = pd.concat([df, embarked_dummies], axis=1)
-        
-        # 원본 Embarked 컬럼은 유지 (필요시 drop_feature로 제거 가능)
+        for i in [df]:
+            i['Embarked'] = i['Embarked'].fillna('S')# 사우스햄튼이 가장 많으니까
+        embarked_mapping = {'S':1, 'C':2, 'Q':3}
+        df['Embarked'] = df['Embarked'].map(embarked_mapping)
         return df
 
     def gender_nominal(self, df: DataFrame) -> pd.DataFrame:
         """
         Sex: 성별 (male, female)
-        - nominal 척도이므로 이진 인코딩 또는 one-hot encoding 사용
+        - nominal 척도이므로 이진 인코딩 사용
+        - male: 0, female: 1로 매핑
         """
         df = df.copy()
         
-        # One-hot encoding 사용
-        sex_dummies = pd.get_dummies(df["Sex"], prefix="Sex")
-        df = pd.concat([df, sex_dummies], axis=1)
+        # Sex 컬럼을 Gender로 변경하고 이진 인코딩
+        df["Gender"] = df["Sex"].map({'male': 0, 'female': 1})
         
-        # 또는 이진 인코딩 (선택사항)
-        # df["Sex_male"] = (df["Sex"] == "male").astype(int)
-        # df["Sex_female"] = (df["Sex"] == "female").astype(int)
-        
-        # 원본 Sex 컬럼을 "Gender" 로 변경
-        df.rename(columns={"Sex": "Gender"}, inplace=True)
-        
+        # 원본 Sex 컬럼은 유지 (필요시 drop_feature로 제거 가능)
         return df
 
     def age_ratio(self, df: DataFrame) -> pd.DataFrame:
@@ -128,21 +115,19 @@ class TitanicMethod(object):
         df = df.copy()
         bins = [-1, 0, 5, 12, 18, 24, 35, 60, np.inf]
         
-        # 결측치를 중앙값으로 채우기
-        if df["Age"].isnull().any():
-            median_age = df["Age"].median()
-            df["Age"].fillna(median_age, inplace=True)
-            ic(f"Age 결측치 {df['Age'].isnull().sum()}개를 중앙값 {median_age}로 채웠습니다")
-        
-        # 나이를 구간화하여 ordinal 피처 생성
-        df["Age"] = pd.cut(
-            df["Age"],
-            bins=bins,
-            labels=[0, 1, 2, 3, 4, 5, 6, 7],
-            include_lowest=True
-        ).astype(int)
-        
-        # 원본 Age 컬럼은 유지
+        self.get_count_of_null(df,"Age")
+        for i in [df]:
+            i['Age'] = i['Age'].fillna(-0.5)
+        self.get_count_of_null(df,"Age")
+        train_max_age = max(df['Age'])
+        max_age = max(train_max_age)
+        print("🌳👀🦙⭕🛹최고령자", max_age)
+        bins = [-1, 0, 5, 12, 18, 24, 35, 60, np.inf]
+        labels = ['Unknown','Baby','Child','Teenager','Student','Young Adult','Adult', 'Senior']
+        age_mapping = {'Unknown':0 , 'Baby': 1, 'Child': 2, 'Teenager' : 3, 'Student': 4,
+                       'Young Adult': 5, 'Adult':6,  'Senior': 7}
+        for i in [df]:
+            i['AgeGroup'] = pd.cut(i['Age'], bins, labels=labels).map(age_mapping)
         return df
     
     def title_nominal(self, df: DataFrame) -> pd.DataFrame:
