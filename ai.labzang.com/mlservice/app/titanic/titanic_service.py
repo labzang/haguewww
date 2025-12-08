@@ -18,8 +18,6 @@ from app.titanic.titanic_method import TitanicMethod
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 
 
-
-
 class TitanicService:
     """타이타닉 데이터 처리 및 머신러닝 서비스"""
     
