@@ -28,18 +28,28 @@ class TitanicService:
         ic("😎😎 전처리 시작")
         the_method = TitanicMethod()
         df_train = the_method.new_model('train.csv')
-        df_test = the_method.new_model('test.csv')
         this_train = the_method.create_train(df_train, 'Survived')
-        this_test = the_method.create_train(df_test, 'Survived')
         ic(f'1. Train 의 type \n {type(this_train)} ')
         ic(f'2. Train 의 column \n {this_train.columns} ')
-        ic(f'3. Train 의 상위 1개 행\n {this_train.head()} ')
+        ic(f'3. Train 의 상위 5개 행\n {this_train.head(5)} ')
         ic(f'4. Train 의 null 의 갯수\n {the_method.check_null(this_train)}개')
-        ic(f'5. Test 의 type \n {type(this_test)}')
-        ic(f'6. Test 의 column \n {this_test.columns}')
-        ic(f'7. Test 의 상위 1개 행\n {this_test.head()}개')
-        ic(f'8. Test 의 null 의 갯수\n {the_method.check_null(this_test)}개')
+        
+        drop_features = ['SibSp', 'Parch', 'Cabin', 'Ticket']
+        this_train = the_method.drop_feature(this_train, *drop_features)
+        this_train = the_method.pclass_ordinal(this_train)
+        this_train = the_method.fare_ordinal(this_train)
+        this_train = the_method.embarked_ordinal(this_train)
+        this_train = the_method.gender_nominal(this_train)
+        this_train = the_method.age_ratio(this_train)
+        this_train = the_method.title_nominal(this_train)
+        drop_name = ['Name']
+        this_train = the_method.drop_feature(this_train, *drop_name)
         ic("😎😎 전처리 완료")
+        ic(f'1. Train 의 type \n {type(this_train)} ')
+        ic(f'2. Train 의 column \n {this_train.columns} ')
+        ic(f'3. Train 의 상위 5개 행\n {this_train.head(5)} ')
+        ic(f'4. Train 의 null 의 갯수\n {the_method.check_null(this_train)}개')
+        
 
     def modeling(self):
         ic("😎😎 모델링 시작")
