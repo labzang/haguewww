@@ -13,6 +13,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from icecream import ic
 from app.titanic.titanic_method import TitanicMethod
+from app.titanic.titanic_dataset import TitanicDataSet
 
 # 공통 모듈 경로 추가
 sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
@@ -57,34 +58,37 @@ class TitanicService:
         the_method = TitanicMethod()
 
         train_csv_path = self._get_csv_path('train.csv')
-        ic(f"😎😎😎 트레인 CSV 파일 경로: {train_csv_path}")
-        df_train = the_method.new_model(str(train_csv_path))
-        this_train = the_method.create_train(df_train, 'Survived')
+        df_train = the_method.read_csv(str(train_csv_path))
+        this_train = the_method.create_df(df_train, 'Survived')
         ic(f'1. Train 의 type \n {type(this_train)} ')
         ic(f'2. Train 의 column \n {this_train.columns} ')
         ic(f'3. Train 의 상위 5개 행\n {this_train.head(5)} ')
         ic(f'4. Train 의 null 의 갯수\n {the_method.check_null(this_train)}개')
 
         test_csv_path = self._get_csv_path('test.csv')
-        ic(f"👽👽👽 테스트 CSV 파일 경로: {test_csv_path}")
-        df_test = the_method.new_model(str(test_csv_path))
-        this_test = the_method.create_test(df_test, 'Survived')
+        df_test = the_method.read_csv(str(test_csv_path))
+        this_test = the_method.create_df(df_test, 'Survived')
         ic(f'1. Test 의 type \n {type(this_test)} ')
         ic(f'2. Test 의 column \n {this_test.columns} ')
         ic(f'3. Test 의 상위 5개 행\n {this_test.head(5)} ')
         ic(f'4. Test 의 null 의 갯수\n {the_method.check_null(this_test)}개')
         
+        this = TitanicDataSet()
+
+        this.train = this_train
+        this.test = this_test
+
         drop_features = ['SibSp', 'Parch', 'Cabin', 'Ticket']
-        this_train , this_test = the_method.drop_feature(this_train, this_test, *drop_features)
-        this_train , this_test = the_method.pclass_ordinal(this_train, this_test)
-        this_train , this_test = the_method.fare_ordinal(this_train, this_test)
-        this_train , this_test = the_method.embarked_ordinal(this_train, this_test)
-        this_train , this_test = the_method.gender_nominal(this_train, this_test)
-        this_train , this_test = the_method.extract_title(this_train, this_test)  # Name에서 Title 추출
-        this_train , this_test = the_method.age_ratio(this_train, this_test)
-        this_train , this_test = the_method.title_nominal(this_train, this_test)
+        this = the_method.drop_feature(this, *drop_features)
+        this = the_method.pclass_ordinal(this)
+        this = the_method.fare_ordinal(this)
+        this = the_method.embarked_ordinal(this)
+        this = the_method.gender_nominal(this)
+        this = the_method.extract_title(this)  # Name에서 Title 추출
+        this = the_method.age_ratio(this)
+        this = the_method.title_nominal(this)
         drop_name = ['Name']
-        this_train , this_test = the_method.drop_feature(this_train, this_test, *drop_name)
+        this = the_method.drop_feature(this, *drop_name)
 
         ic("😎😎😎 트레인 전처리 완료")
         ic(f'1. Train 의 type \n {type(this_train)} ')

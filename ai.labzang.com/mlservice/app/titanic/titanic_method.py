@@ -11,23 +11,32 @@ class TitanicMethod(object):
     def __init__(self):
         self.dataset = TitanicDataSet()
 
-    def read_csv(self, train_fname: str, test_fname: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        return ( pd.read_csv(train_fname) , pd.read_csv(test_fname))
+    def read_csv(self, fname: str) -> pd.DataFrame:
+        return pd.read_csv(fname)
 
-    def create_df(self, train_df: DataFrame, test_df: DataFrame, label: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        return (train_df.drop(columns=[label]), test_df.drop(columns=[label]))
+    def create_df(self, df: DataFrame, label: str) -> pd.DataFrame:
+        return df.drop(columns=[label])
 
-    def create_label(self, train_df: DataFrame, test_df: DataFrame, label: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        return (train_df[[label]], test_df[[label]])
+    def create_label(self, df: DataFrame, label: str) -> pd.DataFrame:
+        return df[[label]]
 
-    def drop_feature(self, train_df: DataFrame, test_df: DataFrame, *feature: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        return (train_df.drop(columns=[x for x in feature]), test_df.drop(columns=[x for x in feature]))
+    def drop_feature(self, this, *feature: str) -> object:
+        [i.drop(j, axis=1, inplace=True) for j in feature for i in [this.train,this.test ] ]
 
-    def check_null(self, train_df: DataFrame, test_df: DataFrame) -> int:
-        return int(train_df.isnull().sum().sum(), test_df.isnull().sum().sum())
+        # for i in [this.train, this.test]:
+        #     for j in feature:
+        #         i.drop(j, axis=1, inplace=True)
+ 
+        return this
+
+    def check_null(self, this) -> int:
+        [ic(i.isnull().sum()) for i in [this.train, this.test]]
+        for i in [this.train, this.test]:
+            print("🐞🐞🐞")
+            ic(i.isnull().sum())
     
     def extract_title_from_name(self, train_df: DataFrame, test_df: DataFrame):
-        # for i in [df.train, df.test]:
+        # for i in [train_df, test_df]:
         #     i['Title'] = i['Name'].str.extract('([A-Za-z]+)\.', expand=False) 
 
         [i.__setitem__('Title', i['Name'].str.extract('([A-Za-z]+)\.', expand=False)) 
@@ -76,60 +85,60 @@ class TitanicMethod(object):
         
 
 
-    def pclass_ordinal(self, df: DataFrame):
-        return df
+    def pclass_ordinal(self, train_df: DataFrame, test_df: DataFrame):
+        return (train_df, test_df)
 
-    def gender_nominal(self, df: DataFrame):
+    def gender_nominal(self, train_df: DataFrame, test_df: DataFrame):
 
         gender_mapping = {'male': 0, 'female': 1}
-        # for i in [df.train, df.test]:
+        # for i in [train_df, test_df]:
         #     i["Gender"] = i["Sex"].map(gender_mapping)
         [i.__setitem__('Gender',i['Sex'].map(gender_mapping)) 
-         for i in [df.train, df.test]]
-        return df
+         for i in [train_df, test_df]]
+        return (train_df, test_df)
 
-    def age_ratio(self, df: DataFrame):
+    def age_ratio(self, train_df: DataFrame, test_df: DataFrame):
         
-        self.get_count_of_null(df,"Age")
-        for i in [df.train, df.test]:
+        self.get_count_of_null(train_df,"Age")
+        for i in [train_df, test_df]:
             i['Age'] = i['Age'].fillna(-0.5)
-        self.get_count_of_null(df,"Age")
-        train_max_age = max(df.train['Age'])
-        test_max_age = max(df.test['Age'])
+        self.get_count_of_null(train_df,"Age")
+        train_max_age = max(train_df['Age'])
+        test_max_age = max(test_df['Age'])
         max_age = max(train_max_age, test_max_age)
         print("🌳👀🦙⭕🛹최고령자", max_age)
         bins = [-1, 0, 5, 12, 18, 24, 35, 60, np.inf]
         labels = ['Unknown','Baby','Child','Teenager','Student','Young Adult','Adult', 'Senior']
         age_mapping = {'Unknown':0 , 'Baby': 1, 'Child': 2, 'Teenager' : 3, 'Student': 4,
                        'Young Adult': 5, 'Adult':6,  'Senior': 7}
-        for i in [df.train, df.test]:
+        for i in [train_df, test_df]:
             i['AgeGroup'] = pd.cut(i['Age'], bins, labels=labels).map(age_mapping)
         
-        return df
+        return (train_df, test_df)
     
-    def get_count_of_null( self, df: DataFrame, feature):
-        for i in [df.train, df.test]:
+    def get_count_of_null( self, train_df: DataFrame, test_df: DataFrame, feature):
+        for i in [train_df, test_df]:
             null_count = i[feature].isnull().sum()
             print("🌳👀🦙⭕🛹빈값의 갯수", null_count)
     
 
-    def fare_orinal(self, df: DataFrame):
-        for i in [df.train, df.test]:
+    def fare_orinal(self, train_df: DataFrame, test_df: DataFrame):
+        for i in [train_df, test_df]:
             i['FareBand'] = pd.qcut(i['Fare'], 4, labels={1,2,3,4})
 
-        df.train = df.train.fillna({'FareBand': 1})
-        df.test = df.test.fillna({'FareBand': 1})
+        train_df = train_df.fillna({'FareBand': 1})
+        test_df = test_df.fillna({'FareBand': 1})
         
-        return df
+        return (train_df, test_df)
 
 
-    def embarked_nominal(self, df: DataFrame):
-        for i in [df.train, df.test]:
+    def embarked_nominal(self, train_df: DataFrame, test_df: DataFrame):
+        for i in [train_df, test_df]:
             i['Embarked'] = i['Embarked'].fillna('S')# 사우스햄튼이 가장 많으니까
         embarked_mapping = {'S':1, 'C':2, 'Q':3}
-        df.train['Embarked'] = df.train['Embarked'].map(embarked_mapping)
-        df.test['Embarked'] = df.test['Embarked'].map(embarked_mapping)
-        return df
+        train_df['Embarked'] = train_df['Embarked'].map(embarked_mapping)
+        test_df['Embarked'] = test_df['Embarked'].map(embarked_mapping)
+        return (train_df, test_df)
 
     def kwargs_sample(**kwargs) -> None:
         # for key, value in kwargs.items():
