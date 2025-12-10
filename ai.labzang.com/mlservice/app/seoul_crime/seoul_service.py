@@ -5,6 +5,8 @@ import pandas as pd
 import numpy as np
 from app.seoul_crime.seoul_method import SeoulMethod
 from app.seoul_crime.seoul_data import SeoulData
+from app.seoul_crime.google_map_singleton import GoogleMapSingleton
+
 try:
     from common.utils import setup_logging
     logger = setup_logging("seoul_service")
@@ -27,8 +29,19 @@ class SeoulService:
         
         # 데이터 로드
         cctv = self.method.csv_to_df(str(cctv_path))
+        cctv = cctv.drop(['2013년도 이전', '2014년', '2015년', '2016년'], axis=1)
         crime = self.method.csv_to_df(str(crime_path))
         pop = self.method.xlsx_to_df(str(pop_path))
+        # pop 컬럼 편집 
+        # axis = 1 방향으로 자치구와 좌로부터 4번째 컬럼만 남기고 모두 삭제 
+        # axis = 0 방향으로 위로부터 2, 3, 4 번째 행을 제거
+        
+        # 컬럼 편집: 자치구(인덱스 1)와 좌로부터 4번째 컬럼(인덱스 3)만 남기기
+        columns_to_keep = [pop.columns[1], pop.columns[3]]  # 자치구와 좌로부터 4번째 컬럼
+        pop = pop[columns_to_keep]
+        
+        # 행 편집: 위로부터 2, 3, 4 번째 행 제거 (인덱스 1, 2, 3)
+        pop = pop.drop(pop.index[1:4])  # 인덱스 1, 2, 3 제거
         
         logger.info(f"  cctv 탑  : {cctv.head(1).to_string()}")
         logger.info(f"  crime 탑  : {crime.head(1).to_string()}")
@@ -62,20 +75,95 @@ class SeoulService:
         )
         
         # 머지 후 "자치구" 컬럼 제거 (기관명과 동일한 값이므로)
-        if '자치구' in cctv_pop.columns and '기관명' in cctv_pop.columns:
-            # 두 컬럼의 값이 동일한지 확인
-            if cctv_pop['기관명'].equals(cctv_pop['자치구']):
-                cctv_pop = cctv_pop.drop(columns=['자치구'])
-                logger.info("'자치구' 컬럼을 제거했습니다 (기관명과 동일한 값).")
-            else:
-                logger.warning("'기관명'과 '자치구'의 값이 다릅니다. 두 컬럼 모두 유지합니다.")
+
+        cctv_pop = cctv_pop.drop(columns=['기관명'])
         
         logger.info(f"머지 완료: cctv_pop shape = {cctv_pop.shape}")
         logger.info(f"cctv_pop 컬럼: {cctv_pop.columns.tolist()}")
         logger.info(f"cctv_pop 탑 :\n{cctv_pop.head(1).to_string()}")
 
-        # 구별 고령자 비율과 CCTV 의 상관계수
-        # 구별 외국인 비율과 CCTV 의 상관계수
+        # 관서명에 따른 경찰서 주소 찾기
+        logger.info("경찰서 관서명으로 주소 검색 시작...")
+        
+        station_names = [] # 경찰서 관서명 리스트
+        for name in crime['관서명']:
+            station_names.append('서울' + str(name[:-1]) + '경찰서')
+        logger.info(f"경찰서 관서명 리스트: {station_names}")
+        
+        station_addrs = []
+        station_lats = []
+        station_lngs = []
+        
+        # 싱글턴 패턴 테스트
+        gmaps1 = GoogleMapSingleton()
+        gmaps2 = GoogleMapSingleton()
+        if gmaps1 is gmaps2:
+            logger.info("GoogleMapSingleton: 동일한 객체입니다 (싱글턴 패턴 정상 작동)")
+        else:
+            logger.warning("GoogleMapSingleton: 다른 객체입니다 (싱글턴 패턴 오류)")
+        
+        gmaps = GoogleMapSingleton() # 구글맵 객체 생성
+        logger.info(f"총 {len(station_names)}개 경찰서 주소 검색 중...")
+        
+        for idx, name in enumerate(station_names, 1):
+            try:
+                tmp = gmaps.geocode(name, language='ko')
+                if tmp and len(tmp) > 0:
+                    formatted_addr = tmp[0].get("formatted_address", "")
+                    logger.info(f"[{idx}/{len(station_names)}] {name}의 검색 결과: {formatted_addr}")
+                    station_addrs.append(formatted_addr)
+                    tmp_loc = tmp[0].get("geometry", {})
+                    location = tmp_loc.get('location', {})
+                    station_lats.append(location.get('lat', 0.0))
+                    station_lngs.append(location.get('lng', 0.0))
+                else:
+                    logger.warning(f"[{idx}/{len(station_names)}] {name}의 검색 결과가 없습니다.")
+                    station_addrs.append("")
+                    station_lats.append(0.0)
+                    station_lngs.append(0.0)
+            except Exception as e:
+                logger.error(f"[{idx}/{len(station_names)}] {name} 검색 중 오류 발생: {str(e)}")
+                station_addrs.append("")
+                station_lats.append(0.0)
+                station_lngs.append(0.0)
+        
+        logger.info(f"주소 검색 완료. 검색된 주소 리스트: {station_addrs}")
+        
+        # 주소에서 자치구 추출
+        gu_names = []
+        for idx, addr in enumerate(station_addrs):
+            try:
+                if addr:
+                    tmp = addr.split()
+                    tmp_gu_list = [gu for gu in tmp if gu[-1] == '구']
+                    if tmp_gu_list:
+                        gu_names.append(tmp_gu_list[0])
+                    else:
+                        logger.warning(f"주소에서 자치구를 찾을 수 없습니다: {addr}")
+                        gu_names.append("")
+                else:
+                    logger.warning(f"빈 주소입니다. 자치구를 추출할 수 없습니다.")
+                    gu_names.append("")
+            except Exception as e:
+                logger.error(f"자치구 추출 중 오류 발생 (주소: {addr}): {str(e)}")
+                gu_names.append("")
+        
+        logger.info(f"추출된 자치구 리스트: {gu_names}")
+        
+        # crime 데이터프레임에 자치구 컬럼 추가
+        if len(gu_names) == len(crime):
+            crime['자치구'] = gu_names
+            logger.info("crime 데이터프레임에 '자치구' 컬럼이 추가되었습니다.")
+        else:
+            logger.warning(f"자치구 리스트 길이({len(gu_names)})와 crime 데이터 길이({len(crime)})가 일치하지 않습니다.")
+            # 길이가 다르더라도 가능한 만큼만 추가
+            crime['자치구'] = gu_names[:len(crime)] if len(gu_names) > len(crime) else gu_names + [''] * (len(crime) - len(gu_names))
+
+        logger.info("구글맵 실행 완료")
+        # crime 편집 
+
+
+
 
 
         
