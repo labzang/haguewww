@@ -1,3 +1,4 @@
+from poplib import POP3
 import sys
 from pathlib import Path
 import pandas as pd
@@ -29,9 +30,9 @@ class SeoulService:
         crime = self.method.csv_to_df(str(crime_path))
         pop = self.method.xlsx_to_df(str(pop_path))
         
-        logger.info(f"  cctv 탑 5 : {cctv.head(5).to_string()}")
-        logger.info(f"  crime 탑 5 : {crime.head(5).to_string()}")
-        logger.info(f"  pop 탑 5 : {pop.head(5).to_string()}")
+        logger.info(f"  cctv 탑  : {cctv.head(1).to_string()}")
+        logger.info(f"  crime 탑  : {crime.head(1).to_string()}")
+        logger.info(f"  pop 탑  : {pop.head(1).to_string()}")
         
         # cctv와 pop 머지 전략
         # - cctv의 "기관명"과 pop의 "자치구"를 키로 사용
@@ -71,7 +72,7 @@ class SeoulService:
         
         logger.info(f"머지 완료: cctv_pop shape = {cctv_pop.shape}")
         logger.info(f"cctv_pop 컬럼: {cctv_pop.columns.tolist()}")
-        logger.info(f"cctv_pop 탑 5:\n{cctv_pop.head(5).to_string()}")
+        logger.info(f"cctv_pop 탑 :\n{cctv_pop.head(1).to_string()}")
 
         # 구별 고령자 비율과 CCTV 의 상관계수
         # 구별 외국인 비율과 CCTV 의 상관계수
@@ -81,8 +82,17 @@ class SeoulService:
         return {
             "status": "success",
             "cctv_rows": len(cctv),
+            "cctv_columns": cctv.columns.tolist(),
             "crime_rows": len(crime),
+            "crime_columns": crime.columns.tolist(),
             "pop_rows": len(pop),
-            "message": "데이터 전처리가 완료되었습니다"
+            "pop_columns": pop.columns.tolist(),
+            "cctv_pop_rows": len(cctv_pop),
+            "cctv_pop_columns": cctv_pop.columns.tolist(),
+            "cctv_preview": cctv.head(3).to_dict(orient='records'),
+            "crime_preview": crime.head(3).to_dict(orient='records'),
+            "pop_preview": pop.head(3).to_dict(orient='records'),
+            "cctv_pop_preview": cctv_pop.head(3).to_dict(orient='records'),
+            "message": "데이터 전처리 및 머지가 완료되었습니다"
         }
         

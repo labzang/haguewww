@@ -3,6 +3,8 @@ import numpy as np
 from pandas import DataFrame
 import logging
 from app.seoul_crime.seoul_data import SeoulData
+import googlemaps
+
 
 logger = logging.getLogger(__name__)
 
@@ -57,4 +59,12 @@ class SeoulMethod(object):
                     merged = merged.drop(columns=[col])
         
         return merged
+
+    def geocode(self, address: str, language: str = 'ko'):
+        """ 주소를 위도 , 경도로 변환하는 메소드 """
+        pass
+
+    def get_api_key(self) -> str:
+        """ API 키를 가져오는 메소드 """
+        pass
 
