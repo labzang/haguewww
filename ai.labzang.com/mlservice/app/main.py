@@ -8,6 +8,10 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+try:
+    from app.seoul_crime.seoul_router import router as seoul_router
+except ImportError:
+    seoul_router = None
 
 # 공통 모듈 경로 추가 (최우선)
 current_file = Path(__file__).resolve()
@@ -111,47 +115,9 @@ app.add_middleware(
 if LoggingMiddleware is not None:
     app.add_middleware(LoggingMiddleware)
 
-# 라우터 등록
-# Gateway에서 이미 /ml로 rewrite하므로 prefix 없이 등록
-app.include_router(titanic_router, prefix="/ml")
-
-# CSV 파일 경로
-CSV_FILE_PATH = Path(__file__).parent / "resources" / "titanic" / "train.csv"
-
-
-def load_top_10_passengers():
-    """train.csv에서 상위 10명의 승객 정보를 로드"""
-    passengers = []
-    
-    try:
-        with open(CSV_FILE_PATH, 'r', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
-            for i, row in enumerate(reader):
-                if i >= 10:  # 상위 10명만
-                    break
-                passengers.append({
-                    "PassengerId": row.get("PassengerId", ""),
-                    "Survived": row.get("Survived", ""),
-                    "Pclass": row.get("Pclass", ""),
-                    "Name": row.get("Name", ""),
-                    "Sex": row.get("Sex", ""),
-                    "Age": row.get("Age", ""),
-                    "SibSp": row.get("SibSp", ""),
-                    "Parch": row.get("Parch", ""),
-                    "Ticket": row.get("Ticket", ""),
-                    "Fare": row.get("Fare", ""),
-                    "Cabin": row.get("Cabin", ""),
-                    "Embarked": row.get("Embarked", "")
-                })
-    except FileNotFoundError:
-        logger.error(f"CSV 파일을 찾을 수 없습니다: {CSV_FILE_PATH}")
-        return []
-    except Exception as e:
-        logger.error(f"CSV 파일 읽기 오류: {e}")
-        return []
-    
-    return passengers
-
+app.include_router(titanic_router, prefix="/titanic")
+if seoul_router is not None:
+    app.include_router(seoul_router, prefix="/seoul")
 
 @app.get("/")
 async def root():
@@ -163,62 +129,12 @@ async def root():
     }
 
 
-@app.get("/passengers/top10")
-async def get_top_10_passengers():
-    """상위 10명의 승객 정보를 반환"""
-    passengers = load_top_10_passengers()
-    
-    if not passengers:
-        return JSONResponse(
-            status_code=404,
-            content={"error": "승객 데이터를 찾을 수 없습니다."}
-        )
-    
-    return {
-        "count": len(passengers),
-        "passengers": passengers
-    }
-
-
-@app.get("/passengers/top10/print")
-async def print_top_10_passengers():
-    """상위 10명의 승객 정보를 터미널에 출력"""
-    passengers = load_top_10_passengers()
-    
-    if not passengers:
-        logger.warning("출력할 승객 데이터가 없습니다.")
-        return {"message": "출력할 승객 데이터가 없습니다."}
-    
-    # 터미널에 출력
-    print("\n" + "="*80)
-    print("타이타닉 승객 상위 10명")
-    print("="*80)
-    
-    for i, passenger in enumerate(passengers, 1):
-        print(f"\n[{i}] {passenger['Name']}")
-        print(f"    PassengerId: {passenger['PassengerId']}")
-        print(f"    Survived: {passenger['Survived']} ({'생존' if passenger['Survived'] == '1' else '사망'})")
-        print(f"    Pclass: {passenger['Pclass']}")
-        print(f"    Sex: {passenger['Sex']}")
-        print(f"    Age: {passenger['Age']}")
-        print(f"    Fare: {passenger['Fare']}")
-        print(f"    Embarked: {passenger['Embarked']}")
-    
-    print("\n" + "="*80)
-    logger.info(f"상위 10명의 승객 정보를 터미널에 출력했습니다.")
-    
-    return {
-        "message": "상위 10명의 승객 정보를 터미널에 출력했습니다.",
-        "count": len(passengers)
-    }
-
 
 @app.on_event("startup")
 async def startup_event():
     """서비스 시작 시 실행"""
     logger.info(f"{config.service_name} v{config.service_version} started")
     # 시작 시 상위 10명 출력
-    await print_top_10_passengers()
 
 
 @app.on_event("shutdown")

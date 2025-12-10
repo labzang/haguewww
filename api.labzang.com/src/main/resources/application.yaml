@@ -48,7 +48,7 @@ spring:
           predicates:
             - Path=/api/ml/**
           filters:
-            - RewritePath=/api/ml/(?<segment>.*), /ml/${segment}
+            - RewritePath=/api/ml/(?<segment>.*), /${segment}
 
       globalcors:
         cors-configurations:

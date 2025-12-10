@@ -37,21 +37,6 @@ async def titanic_root():
         message="Titanic Service is running"
     )
 
-
-@router.get("/health")
-async def health_check():
-    """헬스 체크"""
-    try:
-        service = get_service()
-        service.load_train_data()
-        return create_response(
-            data={"status": "healthy", "service": "titanic"},
-            message="Titanic service is healthy"
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Service unhealthy: {str(e)}")
-
-
 @router.get("/preprocess")
 async def preprocess_data():
     """
