@@ -166,6 +166,9 @@ services:
     networks:
       - labzang-network
     volumes:
+      # 호스트의 save 폴더를 컨테이너의 /app/app/seoul_crime/save에 마운트
+      # 컨테이너 내부 코드에서 Path(__file__).parent / "save" 경로로 저장하면
+      # 호스트의 ./ai.labzang.com/mlservice/app/seoul_crime/save 폴더에 파일이 생성됨
       - ./ai.labzang.com/mlservice/app/seoul_crime/save:/app/app/seoul_crime/save
     environment:
       - DATABASE_URL=${DATABASE_URL}
