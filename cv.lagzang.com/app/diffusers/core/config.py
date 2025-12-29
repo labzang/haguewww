@@ -2,7 +2,8 @@ import os
 from pathlib import Path
 
 # 프로젝트 루트: diffusers/
-BASE_DIR = Path(__file__).resolve().parents[2]
+# core/config.py -> diffusers/core -> diffusers
+BASE_DIR = Path(__file__).resolve().parents[1]
 
 OUTPUTS_DIR = BASE_DIR / "outputs"
 IMAGES_DIR = OUTPUTS_DIR / "images"

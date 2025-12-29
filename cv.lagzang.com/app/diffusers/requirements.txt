@@ -1,8 +1,8 @@
 torch
 torchvision
 torchaudio
-diffusers
-transformers
+diffusers>=0.21.0
+transformers>=4.30.0
 accelerate
 safetensors
 pillow

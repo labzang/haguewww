@@ -1,5 +1,5 @@
 import asyncio
-from .config import MAX_CONCURRENCY
+from app.diffusers.core.config import MAX_CONCURRENCY
 
 _semaphore = asyncio.Semaphore(MAX_CONCURRENCY)
 

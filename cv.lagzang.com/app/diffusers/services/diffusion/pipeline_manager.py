@@ -1,6 +1,6 @@
 import torch
 from diffusers import AutoPipelineForText2Image
-from ...core.config import MODEL_ID, DEVICE, DTYPE, HF_CACHE_DIR
+from app.diffusers.core.config import MODEL_ID, DEVICE, DTYPE, HF_CACHE_DIR
 
 # 모델을 서버 시작 후 1번만 로딩하고 재사용합니다. 
 # VRAM 6GB에서 필요한 옵션(슬라이싱/타일링) 기본 적용입니다

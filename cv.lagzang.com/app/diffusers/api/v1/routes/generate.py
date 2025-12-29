@@ -1,15 +1,19 @@
 from fastapi import APIRouter
-from ..schemas.generate import GenerateRequest, GenerateResponse
-from ...core.limits import get_semaphore
-from ...services.diffusion.txt2img import generate_txt2img
-from ...services.storage.filesystem import save_image_and_meta
-from ...core.config import (
-    DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_STEPS, DEFAULT_GUIDANCE
+from app.diffusers.api.v1.schemas.generate import GenerateRequest, GenerateResponse
+from app.diffusers.core.limits import get_semaphore
+from app.diffusers.services.diffusion.txt2img import generate_txt2img
+from app.diffusers.services.storage.filesystem import save_image_and_meta
+from app.diffusers.core.config import (
+    DEFAULT_WIDTH,
+    DEFAULT_HEIGHT,
+    DEFAULT_STEPS,
+    DEFAULT_GUIDANCE,
 )
 
 # 동시성 제한(세마포어) 걸고 생성 후 저장합니다.
 
 router = APIRouter()
+
 
 @router.post("/generate", response_model=GenerateResponse)
 async def generate(req: GenerateRequest):
@@ -21,7 +25,9 @@ async def generate(req: GenerateRequest):
             width=req.width or DEFAULT_WIDTH,
             height=req.height or DEFAULT_HEIGHT,
             steps=req.steps or DEFAULT_STEPS,
-            guidance_scale=req.guidance_scale if req.guidance_scale is not None else DEFAULT_GUIDANCE,
+            guidance_scale=req.guidance_scale
+            if req.guidance_scale is not None
+            else DEFAULT_GUIDANCE,
             seed=req.seed,
         )
         saved = save_image_and_meta(image, meta)

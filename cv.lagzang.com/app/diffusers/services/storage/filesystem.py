@@ -6,7 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from PIL import Image
 
-from ...core.config import IMAGES_DIR, META_DIR, PUBLIC_IMAGE_BASE, PUBLIC_META_BASE
+from app.diffusers.core.config import IMAGES_DIR, META_DIR, PUBLIC_IMAGE_BASE, PUBLIC_META_BASE
 
 def ensure_dirs():
     IMAGES_DIR.mkdir(parents=True, exist_ok=True)
@@ -24,7 +24,7 @@ def save_image_and_meta(image: Image.Image, meta: dict) -> dict:
     image_path = IMAGES_DIR / image_name
     meta_path = META_DIR / meta_name
 
-    http://image.save(image_path, format="PNG")
+    image.save(image_path, format="PNG")
 
     meta_out = {
         "id": uid,

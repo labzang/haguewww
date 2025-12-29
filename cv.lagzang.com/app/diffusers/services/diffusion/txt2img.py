@@ -1,7 +1,7 @@
 import math
 import torch
-from .pipeline_manager import get_pipeline
-from ...core.config import (
+from app.diffusers.services.diffusion.pipeline_manager import get_pipeline
+from app.diffusers.core.config import (
     DEFAULT_WIDTH, DEFAULT_HEIGHT, DEFAULT_STEPS, DEFAULT_GUIDANCE,
     MAX_WIDTH, MAX_HEIGHT, MAX_STEPS, DEVICE
 )
