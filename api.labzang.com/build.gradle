@@ -27,12 +27,26 @@ bootJar.enabled = true
 jar.enabled = false
 
 dependencies {
-	implementation 'org.springframework.cloud:spring-cloud-starter-gateway'
-	implementation 'org.springframework.cloud:spring-cloud-starter-loadbalancer'
+	// Web MVC 의존성 (모놀리식 구조)
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
+	
+	// 데이터베이스 관련 의존성 (OAuth 서비스에서 사용)
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	runtimeOnly 'org.postgresql:postgresql'
+	
+	// Redis 의존성 (OAuth 서비스에서 사용)
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	
+	// JWT 의존성 (OAuth 서비스에서 사용)
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+	
 	// Eureka 클라이언트 제거 - Simple Discovery Client 사용
 	// implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
-	implementation 'org.springframework.cloud:spring-cloud-starter-config'
-	implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.6.0'
+	
+	// 공통 의존성
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
