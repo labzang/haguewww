@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useAuthStore } from '../../store/authStore';
 
 function KakaoCallbackContent() {
   const router = useRouter();
@@ -57,8 +58,8 @@ function KakaoCallbackContent() {
         console.log('토큰 교환 응답:', data);
 
         if (data.success && data.access_token) {
-          // 토큰 저장
-          localStorage.setItem('access_token', data.access_token);
+          // 토큰 저장 (access_token은 zustand 스토어에, refresh_token은 localStorage에)
+          useAuthStore.getState().setAccessToken(data.access_token);
           if (data.refresh_token) {
             localStorage.setItem('refresh_token', data.refresh_token);
           }

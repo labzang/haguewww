@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuthStore } from '../../store/authStore';
 
 interface UserInfo {
     email?: string;
@@ -15,8 +16,8 @@ export default function Dashboard() {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // 토큰 확인
-        const token = localStorage.getItem('access_token');
+        // 토큰 확인 (zustand 스토어에서)
+        const token = useAuthStore.getState().getAccessToken();
 
         if (!token) {
             // 토큰이 없으면 로그인 페이지로 리다이렉트
@@ -39,8 +40,8 @@ export default function Dashboard() {
     }, [router]);
 
     const handleLogout = () => {
-        // 로컬 스토리지에서 토큰 제거
-        localStorage.removeItem('access_token');
+        // zustand 스토어에서 토큰 제거
+        useAuthStore.getState().clearAccessToken();
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
 

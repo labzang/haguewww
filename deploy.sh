@@ -6,11 +6,9 @@ set -e
 
 echo "🚀 Labzang API 배포 시작..."
 
-# 1. 최신 코드 가져오기 (서브모듈 포함)
+# 1. 최신 코드 가져오기
 echo "📥 최신 코드 가져오기..."
-git pull origin master
-echo "📥 서브모듈 업데이트..."
-git submodule update --remote --recursive
+git pull origin main
 
 # 2. 환경 변수 파일 확인
 if [ ! -f ".env" ]; then

@@ -2,7 +2,7 @@
  * 메인 서비스 - 로그인 핸들러 함수들
  * 클로저 패턴을 사용하여 공통 설정을 외부 스코프에 유지하고 이너 함수로 핸들러를 정의
  */
-export const { handleGoogleLogin, handleKakaoLogin, handleNaverLogin } = (() => {
+const authService = (() => {
     // 외부 스코프 - 공통 설정 및 변수
     const baseUrl = 'http://localhost:8080';
     const authPath = '/api/auth';
@@ -20,11 +20,12 @@ export const { handleGoogleLogin, handleKakaoLogin, handleNaverLogin } = (() => 
             console.log("구글 로그인 요청 시작");
             console.log('구글 로그인 요청 URL:', googleLoginUrl);
 
-            // GET 요청 (백엔드 @GetMapping("/auth-url")에 맞춤)
+            // POST 요청 (백엔드 @PostMapping("/auth-url")에 맞춤)
             const response = await fetch(googleLoginUrl, {
-                method: 'GET',
+                method: 'POST',
                 headers: {
                     'Accept': 'application/json',
+                    'Content-Type': 'application/json',
                 },
             });
 
@@ -109,11 +110,73 @@ export const { handleGoogleLogin, handleKakaoLogin, handleNaverLogin } = (() => 
         console.log("네이버 로그인");
     }
 
+    /**
+     * Refresh Token을 HttpOnly 쿠키에 저장하는 함수
+     * 
+     * @param refreshToken - 저장할 refresh token
+     * @returns Promise<boolean> - 성공 여부
+     */
+    async function setRefreshTokenCookie(refreshToken: string): Promise<boolean> {
+        try {
+            const response = await fetch('/api/auth/set-refresh-token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ refreshToken }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('[setRefreshTokenCookie] 쿠키 설정 실패:', response.status, errorData);
+                return false;
+            }
+
+            const data = await response.json();
+            console.log('[setRefreshTokenCookie] Refresh token이 HttpOnly 쿠키에 저장되었습니다.');
+            return data.success === true;
+        } catch (error) {
+            console.error('[setRefreshTokenCookie] 에러:', error);
+            return false;
+        }
+    }
+
+    /**
+     * Refresh Token 쿠키를 삭제하는 함수
+     * 
+     * @returns Promise<boolean> - 성공 여부
+     */
+    async function clearRefreshTokenCookie(): Promise<boolean> {
+        try {
+            const response = await fetch('/api/auth/set-refresh-token', {
+                method: 'DELETE',
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('[clearRefreshTokenCookie] 쿠키 삭제 실패:', response.status, errorData);
+                return false;
+            }
+
+            const data = await response.json();
+            console.log('[clearRefreshTokenCookie] Refresh token 쿠키가 삭제되었습니다.');
+            return data.success === true;
+        } catch (error) {
+            console.error('[clearRefreshTokenCookie] 에러:', error);
+            return false;
+        }
+    }
+
     // 클로저를 통해 이너 함수들을 반환
     return {
         handleGoogleLogin,
         handleKakaoLogin,
         handleNaverLogin,
+        setRefreshTokenCookie,
+        clearRefreshTokenCookie,
     };
 })();
+
+// 개별 함수 export (기존 코드와의 호환성 유지)
+export const { handleGoogleLogin, handleKakaoLogin, handleNaverLogin, setRefreshTokenCookie, clearRefreshTokenCookie } = authService;
 
