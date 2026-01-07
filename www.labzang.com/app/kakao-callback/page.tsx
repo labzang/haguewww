@@ -39,7 +39,7 @@ function KakaoCallbackContent() {
 
       // 토큰 교환
       try {
-        const response = await fetch('http://localhost:8080/oauth2/kakao/token', {
+        const response = await fetch('api.labzang.com/oauth2/kakao/token', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
